@@ -1,0 +1,18 @@
+{
+	"This email address already exists": "This email address already exists",
+	"User signed up successfully": "User signed up successfully",
+	"Internal server error": "Internal server error",
+	"common": {
+		"error": {
+			"server": "common.error.server"
+		}
+	},
+	"Admin signed up successfully": "Admin signed up successfully",
+	"Place type added successfully": "Place type added successfully",
+	"This place type already exists": "This place type already exists",
+	"Invalid email and password": "Invalid email and password",
+	"Admin signin successfully": "Admin signin successfully",
+	"Place interests fetched successfully": "Place interests fetched successfully",
+	"This user name already exists": "This user name already exists",
+	"User signin successfully": "User signin successfully"
+}
