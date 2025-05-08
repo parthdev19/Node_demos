@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        if(!localStorage.getItem('token')){
+            window.location.href = "alogin";
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .table-photo img {
+            width: 100px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg bg-dark">
+            <div class="container-fluid">
+              <a class="navbar-brand text-light" href="#">Closet</a>
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item">
+                    <a class="nav-link active text-light" aria-current="page" href="/adminIndex">Home</a>
+                  </li>
+                </ul>
+                <form class="d-flex" role="search">
+                  <button class="btn btn-outline-warning" onclick="Logout()">Logout</button>
+                  <script>
+                    async function Logout() {
+                        localStorage.removeItem('token');
+
+                        try {
+                            const response = await fetch("/logout");
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            const data = await response.json();
+                        } catch (error) {
+                            console.error('Error fetching data:', error);
+                        }
+                    }
+                  </script>
+                </form>
+              </div>
+            </div>
+          </nav>
+    </header>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12 d-flex justify-content-end">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPhotoModal">Add New Photo</button>
+            </div>
+
+            <div class="col-12 mt-3 mb-2">
+                <table id="photoTable" class="table table-striped table-bordered table-photo">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>No</th>
+                            <th>Photo Name</th>
+                            <th>Photo Description</th>
+                            <th>Photo</th>
+                            <th>Like</th>
+                            <th>View</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="photoTableBody">
+                        <!-- Table rows will be added here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="addPhotoModal" tabindex="-1" aria-labelledby="addPhotoModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addPhotoModalLabel">Add New Photo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="photoForm">
+              <div class="mb-3">
+                <label for="photoName" class="form-label">Photo Name</label>
+                <input type="text" class="form-control" id="photoName" required>
+              </div>
+              <div class="mb-3">
+                <label for="photoDescription" class="form-label">Photo Description</label>
+                <textarea class="form-control" id="photoDescription" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="photoFile" class="form-label">Upload Photo</label>
+                <input type="file" class="form-control" id="photoFile" accept="image/*" required>
+              </div>
+              <div class="mb-3">
+                <label for="photoPreview" class="form-label">Photo Preview</label>
+                <div id="photoPreview" class="border p-3">
+                  <img id="previewImage" src="" alt="Preview" class="img-fluid d-none">
+                </div>
+              </div>
+              <button type="submit" class="btn btn-success">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+
+        async function loadPhotos() {
+            const tableBody = document.getElementById('photoTableBody')
+            const response = await fetch("/photo_view");
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            let no=1;
+            data.Total_view.forEach(photo => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${no++}</td>
+                    <td>${photo.photo_name}</td>
+                    <td>${photo.photo_description}</td>
+                    <td><img src="http://localhost:3000/${photo.photo_url}" alt="${photo.name}"></td>
+                    <td>${photo.total_like}</td>
+                    <td>${photo.total_view}</td>
+                    <td><button class="btn btn-dark" onclick="deletePhoto('${photo._id}')">Delete</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+            $('#photoTable').DataTable();
+        }
+
+        async function deletePhoto(photoNo) {
+
+          Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!"
+              }).then(async (result) => {
+                if (result.isConfirmed) {
+                  const fomrData = new FormData();
+                  fomrData.append('picId', photoNo);
+                  const response = await fetch("/deleted_picture",{
+                    method: "POST",
+                    body: fomrData
+                  });
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  const data = await response.json();
+                  if (data.success) {
+                    Swal.fire({
+                        title: "Great !",
+                        text: "Product is removed succesfully!",
+                        icon: "success"
+                      }).then((result)=>{
+                        if (result.isConfirmed) {
+                          refreshTable();
+                        }
+                      })
+                  }
+                }
+
+              })
+        }
+
+        function refreshTable() {
+            $('#photoTable').DataTable().destroy();
+            const tableBody = document.getElementById('photoTableBody');
+            tableBody.innerHTML = '';
+            loadPhotos();
+        }
+
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#previewImage').attr('src', e.target.result).removeClass('d-none');
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                $('#previewImage').addClass('d-none');
+            }
+        }
+
+        $(document).ready(function() {
+            loadPhotos();
+
+            $('#photoFile').change(function() {
+                readURL(this);
+            });
+
+            $('#photoForm').submit(async function(event) {
+                event.preventDefault();
+
+                const photoName = $('#photoName').val();
+                const photoDescription = $('#photoDescription').val();
+                const photoFile = $('#photoFile')[0].files[0];
+                
+                if (photoName && photoDescription && photoFile) {
+                   
+                    const formData = new FormData();
+                    formData.append('photo_name', photoName);
+                    formData.append('photo_description', photoDescription);
+                    formData.append('product_picture', photoFile);
+
+                    const dataRes = await fetch("/picture",{
+                      method: "POST",
+                      body: formData
+                    });
+
+                    const dataResJson = await dataRes.json();
+
+                    if(dataResJson.success){
+                      refreshTable();
+                      $('#addPhotoModal').modal('hide');
+                      $('#photoForm')[0].reset();
+                      $('#previewImage').addClass('d-none');
+                    }
+                  
+                }
+            });
+        });
+    </script>
+</body>
+</html>
